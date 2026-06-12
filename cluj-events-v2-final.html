@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClujEvents – Ce se întâmplă în oraș</title>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F7F5FF;
+      --white: #FFFFFF;
+      --text: #1A1040;
+      --muted: #7B6FA0;
+      --border: #E4DEFF;
+      --radius: 18px;
+
+      /* Culori categorii */
+      --concert: #FF3D6E;
+      --sport: #00C9A7;
+      --teatru: #7B61FF;
+      --festival: #FF9500;
+
+      /* Blob colors */
+      --blob1: #FFD6E7;
+      --blob2: #D4ECFF;
+      --blob3: #E0D4FF;
+      --blob4: #FFECD2;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ─── FUNDAL ANIMAT CU BLOB-URI ─── */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.6;
+    }
+    .blob-1 {
+      width: 600px; height: 600px;
+      background: var(--blob1);
+      top: -200px; left: -150px;
+      animation: float1 12s ease-in-out infinite;
+    }
+    .blob-2 {
+      width: 500px; height: 500px;
+      background: var(--blob2);
+      top: 10%; right: -150px;
+      animation: float2 15s ease-in-out infinite;
+    }
+    .blob-3 {
+      width: 400px; height: 400px;
+      background: var(--blob3);
+      bottom: 20%; left: 20%;
+      animation: float3 10s ease-in-out infinite;
+    }
+    .blob-4 {
+      width: 350px; height: 350px;
+      background: var(--blob4);
+      bottom: -100px; right: 10%;
+      animation: float1 14s ease-in-out infinite reverse;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(40px, -30px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.97); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-50px, 30px) scale(1.08); }
+    }
+    @keyframes float3 {
+      0%, 100% { transform: translate(0, 0); }
+      40% { transform: translate(30px, -40px); }
+      80% { transform: translate(-30px, 10px); }
+    }
+
+    /* ─── LAYOUT ─── */
+    .page { position: relative; z-index: 1; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ─── HEADER ─── */
+    header {
+      padding: 1.5rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: var(--text);
+      letter-spacing: -1px;
+    }
+    .logo span { color: var(--concert); }
+    .header-pill {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      padding: 0.4rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      box-shadow: 0 2px 8px rgba(123,97,255,0.08);
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      padding: 2rem 1.5rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--teatru);
+      margin-bottom: 1.2rem;
+      box-shadow: 0 2px 12px rgba(123,97,255,0.1);
+    }
+    .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--sport); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+    .hero h1 {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: var(--text);
+    }
+    .hero h1 .line2 {
+      background: linear-gradient(135deg, var(--concert) 0%, var(--teatru) 60%, var(--festival) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 1.1rem;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    /* ─── STATUS ─── */
+    .status-row {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .status-pill.ok { border-color: #b6f0e0; color: #00957a; background: #f0fdf9; }
+    .status-pill.err { border-color: #ffd6df; color: #cc2244; background: #fff5f7; }
+    .refresh-btn {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { border-color: var(--teatru); color: var(--teatru); }
+
+    /* ─── TABS ─── */
+    .tabs-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 2rem; }
+    .tabs { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex-shrink: 0;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 99px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 0.6rem 1.3rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .tab-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .tab-btn.active.all    { background: var(--text); border-color: var(--text); color: #fff; }
+    .tab-btn.active.concert { background: var(--concert); border-color: var(--concert); color: #fff; }
+    .tab-btn.active.sport   { background: var(--sport); border-color: var(--sport); color: #fff; }
+    .tab-btn.active.teatru  { background: var(--teatru); border-color: var(--teatru); color: #fff; }
+    .tab-btn.active.festival{ background: var(--festival); border-color: var(--festival); color: #fff; }
+
+    /* ─── EVENTS GRID ─── */
+    .events-section { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.4rem;
+    }
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.2rem;
+    }
+
+    /* ─── EVENT CARD ─── */
+    .event-card {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 12px rgba(123,97,255,0.06);
+    }
+    .event-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(123,97,255,0.15);
+    }
+    .card-stripe {
+      height: 5px;
+      width: 100%;
+    }
+    .stripe-concert { background: linear-gradient(90deg, var(--concert), #FF8FA3); }
+    .stripe-sport   { background: linear-gradient(90deg, var(--sport), #7FECDA); }
+    .stripe-teatru  { background: linear-gradient(90deg, var(--teatru), #B3A0FF); }
+    .stripe-festival{ background: linear-gradient(90deg, var(--festival), #FFD080); }
+
+    .card-body { padding: 1.3rem; display: flex; flex-direction: column; gap: 0.7rem; flex: 1; }
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+
+    .cat-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      border-radius: 99px;
+    }
+    .badge-concert { background: #FFF0F3; color: var(--concert); }
+    .badge-sport   { background: #E6FBF7; color: #009980; }
+    .badge-teatru  { background: #F0EDFF; color: var(--teatru); }
+    .badge-festival{ background: #FFF4E6; color: #CC7700; }
+
+    .venue-chip {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 0.22rem 0.6rem;
+      border-radius: 99px;
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-card h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 700;
+      font-size: 0.98rem;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .event-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--festival);
+      background: #FFF4E6;
+      padding: 0.2rem 0.65rem;
+      border-radius: 99px;
+      width: fit-content;
+    }
+
+    .event-desc {
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.3rem;
+      border-top: 1.5px solid var(--border);
+      background: #FAFAFA;
+    }
+    .price-tag { font-size: 0.84rem; font-weight: 600; color: var(--muted); }
+
+    .buy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.45rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s;
+      color: #fff;
+    }
+    .btn-concert { background: var(--concert); }
+    .btn-sport   { background: var(--sport); }
+    .btn-teatru  { background: var(--teatru); }
+    .btn-festival{ background: var(--festival); }
+    .buy-btn:hover { filter: brightness(1.1); transform: scale(1.03); }
+
+    /* ─── SKELETON ─── */
+    .skeleton {
+      background: linear-gradient(90deg, #ede9ff 25%, #f5f3ff 50%, #ede9ff 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius);
+      height: 240px;
+      border: 2px solid var(--border);
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .empty { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 0.8rem; }
+    .empty h3 { font-family: 'Unbounded', sans-serif; font-size: 1rem; margin-bottom: 0.4rem; color: var(--text); }
+
+    /* ─── DIVIDER ─── */
+    .divider { max-width: 1200px; margin: 0 auto 2rem; padding: 0 1.5rem; }
+    .divider hr { border: none; border-top: 2px solid var(--border); }
+
+    /* ─── VENUE CARDS ─── */
+    .venues-section { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+    .venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .venue-card {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.3rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      transition: all 0.2s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .venue-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(123,97,255,0.12); border-color: var(--teatru); }
+    .venue-icon { font-size: 2rem; margin-bottom: 0.2rem; }
+    .venue-card h4 { font-family: 'Unbounded', sans-serif; font-size: 0.9rem; font-weight: 700; }
+    .venue-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+    .venue-link { font-size: 0.78rem; font-weight: 700; color: var(--teatru); margin-top: auto; padding-top: 0.3rem; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--white);
+      border-top: 2px solid var(--border);
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    footer a { color: var(--teatru); text-decoration: none; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2.2rem; letter-spacing: -1px; }
+      .events-grid { grid-template-columns: 1fr; }
+      .venue-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Fundal animat -->
+<div class="bg-canvas">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+
+<div class="page">
+
+  <header>
+    <div class="logo">Cluj<span>Events</span></div>
+    <div class="header-pill">📍 Cluj-Napoca · 2026</div>
+  </header>
+
+  <section class="hero container">
+    <div class="hero-eyebrow">
+      <span class="pulse"></span>
+      Evenimente live în Cluj
+    </div>
+    <h1>
+      Tot ce merită<br>
+      <span class="line2">văzut în Cluj</span>
+    </h1>
+    <p class="hero-sub">Concerte, meciuri, teatru și festivaluri — toate într-un singur loc.</p>
+  </section>
+
+  <div class="status-row">
+    <span class="status-pill" id="statusPill"><span>⏳</span> <span id="statusText">Se încarcă...</span></span>
+    <button class="refresh-btn" onclick="loadEvents()">↻ Reîncarcă</button>
+  </div>
+
+  <div class="tabs-wrap">
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active all"    data-cat="toate"   data-cls="all">✦ Toate</button>
+      <button class="tab-btn"              data-cat="concert" data-cls="concert">🎵 Concerte</button>
+      <button class="tab-btn"              data-cat="sport"   data-cls="sport">⚽ Sport</button>
+      <button class="tab-btn"              data-cat="teatru"  data-cls="teatru">🎭 Teatru</button>
+      <button class="tab-btn"              data-cat="festival"data-cls="festival">🎪 Festivaluri</button>
+    </div>
+  </div>
+
+  <section class="events-section">
+    <div class="section-label">Evenimente viitoare</div>
+    <div class="events-grid" id="eventsGrid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </section>
+
+  <div class="divider container"><hr></div>
+
+  <section class="venues-section">
+    <div class="section-label">Venue-uri principale</div>
+    <div class="venue-grid">
+      <a class="venue-card" href="https://btarena.info/events/" target="_blank">
+        <div class="venue-icon">🏟️</div>
+        <h4>BT Arena</h4>
+        <p>Sala Polivalentă · Concerte mari, EuroVolley, sport de elită</p>
+        <span class="venue-link">→ btarena.info</span>
+      </a>
+      <a class="venue-card" href="https://www.bilete.ro/cluj-napoca/cluj-arena/" target="_blank">
+        <div class="venue-icon">⚽</div>
+        <h4>Cluj Arena</h4>
+        <p>Capacitate 30.000 · U Cluj, CFR Cluj, meciuri internaționale</p>
+        <span class="venue-link">→ bilete.ro</span>
+      </a>
+      <a class="venue-card" href="https://www.teatrulnationalcluj.ro/" target="_blank">
+        <div class="venue-icon">🎭</div>
+        <h4>Teatrul Național</h4>
+        <p>Lucian Blaga · Teatru, dans, spectacole de stagiune</p>
+        <span class="venue-link">→ teatrulnationalcluj.ro</span>
+      </a>
+      <a class="venue-card" href="https://www.eventim.ro/city/cluj-napoca-7354/" target="_blank">
+        <div class="venue-icon">🎟️</div>
+        <h4>Eventim Cluj</h4>
+        <p>Platforma principală de bilete pentru toate evenimentele majore</p>
+        <span class="venue-link">→ eventim.ro</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    Date din Google Sheets · Biletele se cumpără direct de la organizatori ·
+    <a href="https://zilesinopti.ro/evenimente-cluj/" target="_blank">Zile și Nopți</a> ·
+    <a href="https://www.eventim.ro/city/cluj-napoca-7354/" target="_blank">Eventim Cluj</a>
+  </footer>
+
+</div>
+
+<script>
+const SHEET_ID = '1W9zVltZxi1aDwB23EWn6JZzXOzUykREQ_HhiwgwO7b0';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+const CAT_CONFIG = {
+  concert:  { badge: 'badge-concert', stripe: 'stripe-concert', btn: 'btn-concert', label: '🎵 Concert' },
+  sport:    { badge: 'badge-sport',   stripe: 'stripe-sport',   btn: 'btn-sport',   label: '⚽ Sport' },
+  teatru:   { badge: 'badge-teatru',  stripe: 'stripe-teatru',  btn: 'btn-teatru',  label: '🎭 Teatru' },
+  festival: { badge: 'badge-festival',stripe: 'stripe-festival',btn: 'btn-festival',label: '🎪 Festival' },
+};
+
+let allEvents = [], activeTab = 'toate';
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (let ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,''));
+    return obj;
+  }).filter(e => e.titlu);
+}
+
+function setStatus(type, text) {
+  const p = document.getElementById('statusPill');
+  const t = document.getElementById('statusText');
+  p.className = 'status-pill ' + type;
+  t.textContent = text;
+}
+
+async function loadEvents() {
+  setStatus('', '⏳ Se încarcă evenimentele...');
+  document.getElementById('eventsGrid').innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+  try {
+    const res = await fetch(SHEET_URL);
+    if (!res.ok) throw new Error();
+    const text = await res.text();
+    allEvents = parseCSV(text);
+    setStatus('ok', `✓ ${allEvents.length} evenimente · Actualizat acum`);
+  } catch {
+    setStatus('err', '⚠ Sheet-ul nu e public — folosesc date locale');
+    allEvents = FALLBACK;
+  }
+  renderEvents();
+}
+
+function renderEvents() {
+  const grid = document.getElementById('eventsGrid');
+  const list = activeTab === 'toate' ? allEvents : allEvents.filter(e => e.categorie === activeTab);
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>Nimic momentan</h3><p>Niciun eveniment în această categorie.</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(e => {
+    const cat = e.categorie || 'concert';
+    const cfg = CAT_CONFIG[cat] || CAT_CONFIG.concert;
+    return `
+    <a class="event-card" href="${e.link_bilete||'#'}" target="_blank" rel="noopener">
+      <div class="card-stripe ${cfg.stripe}"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <span class="cat-badge ${cfg.badge}">${cfg.label}</span>
+          <span class="venue-chip">${e.venue||''}</span>
+        </div>
+        <h3>${e.titlu}</h3>
+        <span class="event-date">📅 ${e.data||''}</span>
+        <p class="event-desc">${e.descriere||''}</p>
+      </div>
+      <div class="card-footer">
+        <span class="price-tag">🎟 ${e.pret||''}</span>
+        <span class="buy-btn ${cfg.btn}">Bilete →</span>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); });
+  btn.classList.add('active');
+  activeTab = btn.dataset.cat;
+  renderEvents();
+});
+
+const FALLBACK = [
+  { titlu:"Spirit of the Horse – Sports Festival", data:"11 Iunie 2026 · 18:00", venue:"BT Arena", categorie:"concert", descriere:"Spectacol ecvestru international — premiera absoluta in Romania cu 20+ cai exceptional.", pret:"Bilete disponibile", link_bilete:"https://www.entertix.ro/evenimente/37277/spirit-of-the-horse-sports-festival-11-iunie-2026-bt-arena-cluj-napoca.html" },
+  { titlu:"TIFF 2026", data:"12–22 Iunie 2026", venue:"Cinematografe Cluj", categorie:"festival", descriere:"Festivalul International de Film Transilvania. Proiectii, premieri, invitati internationali.", pret:"De la 25 lei", link_bilete:"https://tiff.ro" },
+  { titlu:"CEV EuroVolley 2026 – Grupa D", data:"Septembrie 2026", venue:"BT Arena", categorie:"sport", descriere:"Romania joaca acasa! BT Arena gazduieste Grupa D a Campionatului European de Volei.", pret:"Bilete in curand", link_bilete:"https://www.eventim.ro/city/cluj-napoca-7354/venue/btarena-93887/" },
+  { titlu:"Discoteca '80 – Editia a 9-a", data:"19 Septembrie 2026 · 19:00", venue:"BT Arena", categorie:"concert", descriere:"Ricchi e Poveri, C.C. Catch, Smokie, Saragossa Band, Francesco Napoli si Fancy — 6 concerte live!", pret:"De la 252 lei", link_bilete:"https://www.eventim.ro/city/cluj-napoca-7354/" },
+  { titlu:"Deep Purple – 1 More Time Tour", data:"1 Octombrie 2026 · 20:00", venue:"BT Arena", categorie:"concert", descriere:"Legendele hard rock revin in Romania! Incluse in Rock & Roll Hall of Fame.", pret:"Bilete pe Eventim", link_bilete:"https://www.eventim.ro/city/cluj-napoca-7354/" },
+  { titlu:"Subcarpati – Concert BT Arena", data:"19 Noiembrie 2026", venue:"BT Arena", categorie:"concert", descriere:"Ritmuri urbane de bass si hip-hop contopite cu sunete traditionale de caval si fluier.", pret:"Bilete earlybird", link_bilete:"https://www.infomusic.ro/agenda/subcarpati-concert-cluj-2026/" },
+  { titlu:"Bryan Adams – Roll with the Punches", data:"17 Decembrie 2026 · 20:00", venue:"BT Arena", categorie:"concert", descriere:"Unul dintre cei mai influenti artisti pop-rock revine in Romania cu hituri legendare.", pret:"Bilete pe Eventim", link_bilete:"https://www.eventim.ro/city/cluj-napoca-7354/" },
+  { titlu:"Lungul drum al zilei catre noapte", data:"14 Iunie 2026 · 19:00", venue:"Teatrul National Lucian Blaga", categorie:"teatru", descriere:"Premiera in Studioul Euphorion. Tragedie moderna dupa Eugene O'Neill.", pret:"Bilete la casierie", link_bilete:"https://www.teatrulnationalcluj.ro/" },
+  { titlu:"U Cluj – Meciuri acasa Superliga", data:"Sezon 2026–2027", venue:"Cluj Arena", categorie:"sport", descriere:"FC Universitatea Cluj joaca acasa pe Cluj Arena. Abonamente si bilete per meci.", pret:"Bilete pe fcucluj.ro", link_bilete:"https://www.fcucluj.ro/bilete" },
+  { titlu:"CFR Cluj – Meciuri acasa", data:"Sezon 2026–2027", venue:"Cluj Arena", categorie:"sport", descriere:"CFR Cluj se muta pe Cluj Arena din sezonul 2026/2027, inclusiv pentru cupele europene.", pret:"Bilete pe bilete.ro", link_bilete:"https://www.bilete.ro/cluj-napoca/stadionul-dr-constantin-radulescu-cfr-cluj/" },
+  { titlu:"Wonder Family Fest – Editia a III-a", data:"31 Iulie – 2 Aug 2026", venue:"Wonderland Resort Feleacu", categorie:"festival", descriere:"Festival pentru familii langa Cluj. Muzica, activitati pentru copii, atmosfera de vacanta.", pret:"Bilete pe entertix.ro", link_bilete:"https://www.entertix.ro/" },
+];
+
+loadEvents();
+</script>
+</body>
+</html>

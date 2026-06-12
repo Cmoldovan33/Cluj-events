@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>ClujEvents · Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F7F5FF;
+      --white: #FFFFFF;
+      --text: #1A1040;
+      --muted: #7B6FA0;
+      --border: #E4DEFF;
+      --radius: 16px;
+      --concert: #FF3D6E;
+      --sport: #00C9A7;
+      --teatru: #7B61FF;
+      --festival: #FF9500;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--white);
+      border-bottom: 2px solid var(--border);
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 1.1rem; }
+    .logo span { color: var(--concert); }
+    .admin-badge {
+      background: #FFF0F3;
+      color: var(--concert);
+      border-radius: 99px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* MAIN */
+    main { padding: 1.5rem 1.2rem 3rem; max-width: 520px; margin: 0 auto; }
+
+    .page-title {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .page-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+    /* FORM */
+    .form-card {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      box-shadow: 0 4px 20px rgba(123,97,255,0.08);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+    label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    input, textarea, select {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      width: 100%;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--teatru);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* CATEGORIE SELECTOR */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .cat-option { display: none; }
+    .cat-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.7rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: var(--bg);
+      color: var(--muted);
+      text-align: center;
+    }
+    .cat-option:checked + .cat-label { color: #fff; border-color: transparent; }
+    #cat-concert:checked + .cat-label { background: var(--concert); }
+    #cat-sport:checked   + .cat-label { background: var(--sport); }
+    #cat-teatru:checked  + .cat-label { background: var(--teatru); }
+    #cat-festival:checked+ .cat-label { background: var(--festival); }
+
+    /* SUBMIT BTN */
+    .submit-btn {
+      background: linear-gradient(135deg, var(--concert), var(--teatru));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 1rem;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(255,61,110,0.25);
+    }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: #fff;
+      padding: 0.8rem 1.4rem;
+      border-radius: 99px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      z-index: 100;
+      transition: transform 0.3s;
+      white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #00957a; }
+    .toast.error { background: var(--concert); }
+
+    /* EVENTS LIST */
+    .events-preview {
+      margin-top: 2rem;
+    }
+    .preview-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .count-badge {
+      background: var(--teatru);
+      color: #fff;
+      border-radius: 99px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+    }
+    .event-row {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .event-row-cat {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .rc-concert  { background: var(--concert); }
+    .rc-sport    { background: var(--sport); }
+    .rc-teatru   { background: var(--teatru); }
+    .rc-festival { background: var(--festival); }
+    .event-row-info { flex: 1; min-width: 0; }
+    .event-row-title { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-row-date  { font-size: 0.78rem; color: var(--muted); }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--teatru);
+      font-weight: 600;
+      font-size: 0.88rem;
+      text-decoration: none;
+      margin-bottom: 1.5rem;
+    }
+
+    .sheet-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .sheet-link:hover { border-color: var(--sport); }
+    .sheet-icon { font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Cluj<span>Events</span></div>
+  <span class="admin-badge">⚙ Admin</span>
+</header>
+
+<main>
+  <a class="back-link" href="index.html">← Înapoi la site</a>
+
+  <div class="page-title">Adaugă eveniment</div>
+  <p class="page-sub">Completează formularul — evenimentul apare instant pe site.</p>
+
+  <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1W9zVltZxi1aDwB23EWn6JZzXOzUykREQ_HhiwgwO7b0/edit" target="_blank">
+    <span class="sheet-icon">📊</span>
+    Deschide Google Sheet direct
+  </a>
+
+  <div class="form-card">
+
+    <div class="field">
+      <label>Titlu eveniment *</label>
+      <input type="text" id="titlu" placeholder="ex: Deep Purple la BT Arena" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label>Data & ora</label>
+      <input type="text" id="data" placeholder="ex: 15 Iulie 2026 · 20:00" />
+    </div>
+
+    <div class="field">
+      <label>Venue / Locație</label>
+      <input type="text" id="venue" placeholder="ex: BT Arena, Cluj Arena..." />
+    </div>
+
+    <div class="field">
+      <label>Categorie *</label>
+      <div class="cat-grid">
+        <input type="radio" name="cat" id="cat-concert"  value="concert"  class="cat-option" checked />
+        <label for="cat-concert"  class="cat-label">🎵 Concert</label>
+        <input type="radio" name="cat" id="cat-sport"    value="sport"    class="cat-option" />
+        <label for="cat-sport"    class="cat-label">⚽ Sport</label>
+        <input type="radio" name="cat" id="cat-teatru"   value="teatru"   class="cat-option" />
+        <label for="cat-teatru"   class="cat-label">🎭 Teatru</label>
+        <input type="radio" name="cat" id="cat-festival" value="festival" class="cat-option" />
+        <label for="cat-festival" class="cat-label">🎪 Festival</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Descriere scurtă</label>
+      <textarea id="descriere" placeholder="Câteva cuvinte despre eveniment..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Preț bilete</label>
+      <input type="text" id="pret" placeholder="ex: De la 80 lei" />
+    </div>
+
+    <div class="field">
+      <label>Link bilete (opțional)</label>
+      <input type="url" id="link" placeholder="https://eventim.ro/..." />
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="addEvent()">
+      ＋ Adaugă evenimentul
+    </button>
+
+  </div>
+
+  <!-- Lista curentă -->
+  <div class="events-preview">
+    <div class="preview-title">
+      Evenimente curente
+      <span class="count-badge" id="countBadge">0</span>
+    </div>
+    <div id="eventsList">
+      <p style="color:var(--muted);font-size:0.88rem;text-align:center;padding:1rem">Se încarcă...</p>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_ID = '1W9zVltZxi1aDwB23EWn6JZzXOzUykREQ_HhiwgwO7b0';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+// ─── TOAST ───
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ─── PARSARE CSV ───
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (let ch of line) {
+      if (ch==='"') { inQ=!inQ; }
+      else if (ch===',' && !inQ) { vals.push(cur.trim()); cur=''; }
+      else cur+=ch;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h,i) => obj[h]=(vals[i]||'').replace(/^"|"$/g,''));
+    return obj;
+  }).filter(e=>e.titlu);
+}
+
+// ─── ÎNCARCĂ LISTA ───
+async function loadList() {
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+    const events = parseCSV(text);
+    renderList(events);
+  } catch {
+    document.getElementById('eventsList').innerHTML =
+      '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:1rem">⚠ Fă Sheet-ul public ca să vezi lista</p>';
+  }
+}
+
+const CAT_DOT = { concert:'rc-concert', sport:'rc-sport', teatru:'rc-teatru', festival:'rc-festival' };
+
+function renderList(events) {
+  document.getElementById('countBadge').textContent = events.length;
+  if (!events.length) {
+    document.getElementById('eventsList').innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:1rem">Niciun eveniment încă.</p>';
+    return;
+  }
+  document.getElementById('eventsList').innerHTML = events.map(e => `
+    <div class="event-row">
+      <div class="event-row-cat ${CAT_DOT[e.categorie]||'rc-concert'}"></div>
+      <div class="event-row-info">
+        <div class="event-row-title">${e.titlu}</div>
+        <div class="event-row-date">${e.data||'—'} · ${e.venue||'—'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── ADAUGĂ EVENIMENT ───
+// Folosim Google Apps Script Web App (trebuie creat o singură dată)
+// Până atunci, copiem în clipboard CSV-ul pentru paste manual în Sheet
+async function addEvent() {
+  const titlu = document.getElementById('titlu').value.trim();
+  if (!titlu) { showToast('⚠ Titlul e obligatoriu', 'error'); return; }
+
+  const data     = document.getElementById('data').value.trim();
+  const venue    = document.getElementById('venue').value.trim();
+  const cat      = document.querySelector('input[name="cat"]:checked').value;
+  const descriere= document.getElementById('descriere').value.trim();
+  const pret     = document.getElementById('pret').value.trim();
+  const link     = document.getElementById('link').value.trim();
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Se adaugă...';
+
+  // Construim rândul CSV
+  const row = [titlu, data, venue, cat, descriere, pret, link]
+    .map(v => `"${v.replace(/"/g,'""')}"`)
+    .join(',');
+
+  // Copiem în clipboard
+  try {
+    await navigator.clipboard.writeText(row);
+    showToast('✓ Copiat! Paste în Sheet pe rândul următor', 'success');
+  } catch {
+    // Fallback: afișăm rândul
+    showToast('✓ Copiază rândul de mai jos în Sheet', 'success');
+  }
+
+  // Afișăm rândul generat
+  const output = document.createElement('div');
+  output.style.cssText = 'background:#f0fdf9;border:2px solid #b6f0e0;border-radius:12px;padding:1rem;margin-top:1rem;font-size:0.78rem;word-break:break-all;color:#1A1040;line-height:1.6';
+  output.innerHTML = `<strong style="display:block;margin-bottom:0.4rem;color:#00957a">📋 Rând de adăugat în Sheet:</strong>${row}`;
+  document.querySelector('.form-card').insertAdjacentElement('afterend', output);
+  setTimeout(() => output.remove(), 15000);
+
+  // Reset form
+  setTimeout(() => {
+    document.getElementById('titlu').value = '';
+    document.getElementById('data').value = '';
+    document.getElementById('venue').value = '';
+    document.getElementById('descriere').value = '';
+    document.getElementById('pret').value = '';
+    document.getElementById('link').value = '';
+    btn.disabled = false;
+    btn.textContent = '＋ Adaugă evenimentul';
+    loadList();
+  }, 1000);
+}
+
+loadList();
+</script>
+</body>
+</html>
